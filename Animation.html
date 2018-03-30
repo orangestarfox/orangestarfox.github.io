@@ -1,23 +1,23 @@
 <!DOCTYPE html>
 <html>
-<head> 
-<meta charset="utf-8"> 
-<title>Draw</title> 
+<head>
+	<meta charset="utf-8" />
+	<title>Draw</title>
 </head>
 <body>
-
-<canvas id="myCanvas" width="200" height="100" style="border:1px solid #c3c3c3;">
-您的浏览器不支持 HTML5 canvas 标签。
-</canvas>
-
-<script>
+<div style="background:#eee;border:1px solid #ccc;padding:5px 10px;">
+<p><canvas height="100" id="myCanvas" style="border:1px solid #c3c3c3;" width="200"> 您的浏览器不支持 HTML5 canvas 标签。 </canvas> <script>
 
 var c=document.getElementById("myCanvas");
 var ctx=c.getContext("2d");
 ctx.fillStyle="#FF0000";
 ctx.fillRect(0,0,150,75);
 
-</script>
+</script></p>
+</div>
 
+<div style="background:#eee;border:1px solid #ccc;padding:5px 10px;">
+<p><a herf="index.html"><input name="return" type="button" value="返回" /></a></p>
+</div>
 </body>
 </html>
