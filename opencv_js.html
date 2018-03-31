@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Digtal image process with opencv</title>
+</head>
+<body>
+<h2>Hello OpenCV.js</h2>
+<p id="status">OpenCV.js is loading...</p>
+<div>
+  <div class="inputoutput">
+    <img id="imageSrc" alt="No Image" />
+    <div class="caption">imageSrc <input type="file" id="fileInput" name="file" /></div>
+  </div>
+  <div class="inputoutput">
+    <canvas id="canvasOutput" ></canvas>
+    <div class="caption">canvasOutput</div>
+  </div>
+</div>
+<div style="background:#eee;border:1px solid #ccc;padding:5px 10px;">
+<button onclick="filter()">Filter</button>   
+<button onclick="canny()">Canny</button>
+<button onclick="Histogram()">Histogram</button>
+<button onclick="EqualizeHistogram()">EqualizeHistogram</button>
+<button onclick="clare()">CLAHE</button>
+<button onclick="FFT()">FFT</button>
+<button onclick="HoughLines()">HoughLines</button>
+
+<button onclick="HoughCircles()">HoughCircles</button>
+</div>
+<script type="text/javascript">
+let imgElement = document.getElementById('imageSrc');
+let inputElement = document.getElementById('fileInput');
+
+inputElement.addEventListener('change', (e) => {
+  imgElement.src = URL.createObjectURL(e.target.files[0]);
+}, false);
+imgElement.onload = function() {
+  let mat = cv.imread(imgElement);
+  cv.imshow('canvasInput', mat);
+  mat.delete();
+};
+
+function canny(){
+
+let src = cv.imread(imgElement);
+let dst = new cv.Mat();
+cv.cvtColor(src, src, cv.COLOR_RGB2GRAY, 0);
+// You can try more different parameters
+cv.Canny(src, dst, 50, 100, 3, false);
+cv.imshow('canvasOutput', dst);
+src.delete(); dst.delete();
+
+}
+function filter(){
+let src = cv.imread(imgElement);
+let dst = new cv.Mat();
+let M = cv.matFromArray(3, 3,cv.CV_32FC1, [-1, -1,-1, 
+										  -1, 8,-1,
+										   -1, -1,-1]);
+//let M = cv.Mat.eye(3, 3, cv.CV_32FC1);
+let anchor = new cv.Point(-1, -1);
+// You can try more different parameters
+cv.filter2D(src, dst, cv.CV_8U, M, anchor, 0, cv.BORDER_DEFAULT);
+cv.imshow('canvasOutput', dst);
+src.delete(); dst.delete(); M.delete();
+
+
+
+}
+function Histogram(){
+let src = cv.imread(imgElement);
+cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+let srcVec = new cv.MatVector();
+srcVec.push_back(src);
+let accumulate = false;
+let channels = [0];
+let histSize = [256];
+let ranges = [0, 255];
+let hist = new cv.Mat();
+let mask = new cv.Mat();
+let color = new cv.Scalar(0, 255, 255);
+let scale = 2;
+// You can try more different parameters
+cv.calcHist(srcVec, channels, mask, hist, histSize, ranges, accumulate);
+let result = cv.minMaxLoc(hist, mask);
+let max = result.maxVal;
+let dst = new cv.Mat.zeros(src.rows, histSize[0] * scale,
+                           cv.CV_8UC3);
+// draw histogram
+for (let i = 0; i < histSize[0]; i++) {
+    let binVal = hist.data32F[i] * src.rows / max;
+    let pioint1 = new cv.Point(i * scale, src.rows - 1);
+    let pioint2 = new cv.Point((i + 1) * scale - 1, src.rows - binVal);
+    cv.rectangle(dst, pioint1, pioint2, color, cv.FILLED);
+}
+cv.imshow('canvasOutput', dst);
+src.delete(); dst.delete(); srcVec.delete(); mask.delete(); hist.delete();
+}
+
+function EqualizeHistogram(){
+let src = cv.imread(imgElement);
+let dst = new cv.Mat();
+cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+cv.equalizeHist(src, dst);
+cv.imshow('canvasOutput', src);
+cv.imshow('canvasOutput', dst);
+src.delete(); dst.delete();
+
+}
+function clare(){
+let src = cv.imread(imgElement);
+let equalDst = new cv.Mat();
+let claheDst = new cv.Mat();
+cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+cv.equalizeHist(src, equalDst);
+let tileGridSize = new cv.Size(8, 8);
+// You can try more different parameters
+let clahe = new cv.CLAHE(40, tileGridSize);
+clahe.apply(src, claheDst);
+cv.imshow('canvasOutput', equalDst);
+cv.imshow('canvasOutput', claheDst);
+src.delete(); equalDst.delete(); claheDst.delete(); clahe.delete();
+}
+function FFT(){
+let src = cv.imread(imgElement);
+cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+
+// get optimal size of DFT
+let optimalRows = cv.getOptimalDFTSize(src.rows);
+let optimalCols = cv.getOptimalDFTSize(src.cols);
+let s0 = cv.Scalar.all(0);
+let padded = new cv.Mat();
+cv.copyMakeBorder(src, padded, 0, optimalRows - src.rows, 0,
+                  optimalCols - src.cols, cv.BORDER_CONSTANT, s0);
+
+// use cv.MatVector to distribute space for real part and imaginary part
+let plane0 = new cv.Mat();
+padded.convertTo(plane0, cv.CV_32F);
+let planes = new cv.MatVector();
+let complexI = new cv.Mat();
+let plane1 = new cv.Mat.zeros(padded.cols, padded.rows, cv.CV_32F);
+planes.push_back(plane0);
+planes.push_back(plane1);
+cv.merge(planes, complexI);
+
+// in-place dft transfrom
+cv.dft(complexI, complexI);
+
+// compute log(1 + sqrt(Re(DFT(img))**2 + Im(DFT(img))**2))
+cv.split(complexI, planes);
+cv.magnitude(planes.get(0), planes.get(1), planes.get(0));
+let mag = planes.get(0);
+let m1 = new cv.Mat.ones(mag.rows, mag.cols, mag.type());
+cv.add(mag, m1, mag);
+cv.log(mag, mag);
+
+// crop the spectrum, if it has an odd number of rows or columns
+let rect = new cv.Rect(0, 0, mag.cols & -2, mag.rows & -2);
+mag = mag.roi(rect);
+
+// rearrange the quadrants of Fourier image
+// so that the origin is at the image center
+let cx = mag.cols / 2;
+let cy = mag.rows / 2;
+let tmp = new cv.Mat();
+
+let rect0 = new cv.Rect(0, 0, cx, cy);
+let rect1 = new cv.Rect(cx, 0, cx, cy);
+let rect2 = new cv.Rect(0, cy, cx, cy);
+let rect3 = new cv.Rect(cx, cy, cx, cy);
+
+let q0 = mag.roi(rect0);
+let q1 = mag.roi(rect1);
+let q2 = mag.roi(rect2);
+let q3 = mag.roi(rect3);
+
+// exchange 1 and 4 quadrants
+q0.copyTo(tmp);
+q3.copyTo(q0);
+tmp.copyTo(q3);
+
+// exchange 2 and 3 quadrants
+q1.copyTo(tmp);
+q2.copyTo(q1);
+tmp.copyTo(q2);
+
+// The pixel value of cv.CV_32S type image ranges from 0 to 1.
+cv.normalize(mag, mag, 0, 1, cv.NORM_MINMAX);
+
+cv.imshow('canvasOutput', mag);
+src.delete(); padded.delete(); planes.delete(); complexI.delete(); m1.delete(); tmp.delete();
+
+}
+function HoughLines(){
+let src = cv.imread(imgElement);
+let dst = cv.Mat.zeros(src.rows, src.cols, cv.CV_8U);
+let lines = new cv.Mat();
+let color = new cv.Scalar(255, 0, 0);
+cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+cv.Canny(src, src, 50, 200, 3);
+// You can try more different parameters
+cv.HoughLinesP(src, lines, 1, Math.PI / 180, 2, 0, 0);
+// draw lines
+for (let i = 0; i < lines.rows; ++i) {
+    let startPoint = new cv.Point(lines.data32S[i * 4], lines.data32S[i * 4 + 1]);
+    let endPoint = new cv.Point(lines.data32S[i * 4 + 2], lines.data32S[i * 4 + 3]);
+    cv.line(dst, startPoint, endPoint, color);
+}
+cv.imshow('canvasOutput', dst);
+src.delete(); dst.delete(); lines.delete();
+}
+function HoughCircles(){
+let src = cv.imread(imgElement);
+let dst = cv.Mat.zeros(src.rows, src.cols, cv.CV_8U);
+let circles = new cv.Mat();
+let color = new cv.Scalar(255, 0, 0);
+cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+// You can try more different parameters
+cv.HoughCircles(src, circles, cv.HOUGH_GRADIENT,
+                1, 45, 75, 40, 0, 0);
+// draw circles
+for (let i = 0; i < circles.cols; ++i) {
+    let x = circles.data32F[i * 3];
+    let y = circles.data32F[i * 3 + 1];
+    let radius = circles.data32F[i * 3 + 2];
+    let center = new cv.Point(x, y);
+    cv.circle(dst, center, radius, color);
+}
+cv.imshow('canvasOutput', dst);
+src.delete(); dst.delete(); circles.delete();}
+function onOpenCvReady() {
+  document.getElementById('status').innerHTML = 'OpenCV.js is ready.';
+}
+</script>
+<script async src="opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
+</body>
+</html>
