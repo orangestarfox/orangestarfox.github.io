@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Digtal image process with opencv</title>
+<link rel="stylesheet" href="div.css" type="text/css" />
+</head>
+<body>
+<h2></h2>
+<p id="status">OpenCV.js is loading...</p>
+<div>
+  <div class="inputoutput">
+   
+	<div > <video id="videoInput" alt="No Image" />
+			<canvas id="canvasFrame" ></canvas>
+			<canvas id="canvasOutput" ></canvas></div>
+	 
+
+	</div>
+   
+  </div>
+</div>
+<div style="background:#eee;border:1px solid #ccc;padding:5px 10px;">
+<button onclick="videoCapture()">processVideo</button>   
+</div>  
+<div style="background:#777;border:1px solid #ccc;padding:5px 10px;">
+<p><a href="index.html"><input name="return" type="button" value="返回" /></a></p>
+</div>
+
+<script type="text/javascript">
+var streaming=false;
+function videoCapture(){
+let canvasFrame = document.getElementById("canvasFrame"); // canvasFrame is the id of <canvas>
+let video = document.getElementById('videoInput');
+let src = new cv.Mat(video.height, video.width, cv.CV_8UC4);
+let dst = new cv.Mat(video.height, video.width, cv.CV_8UC1);
+let cap = new cv.VideoCapture(video);
+navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+    .then(function(stream) {
+        video.srcObject = stream;
+        video.play();
+    })
+    .catch(function(err) {
+        console.log("An error occurred! " + err);
+    });
+const FPS = 30;
+streaming=!streaming;
+function processVideo() {
+    try {
+        if (!streaming) {
+            // clean and stop.
+            src.delete();
+            dst.delete();
+            return;
+        }
+        let begin = Date.now();
+        // start processing.
+        cap.read(src);
+        cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY);
+        cv.imshow('canvasOutput', dst);
+        // schedule the next one.
+        let delay = 1000/FPS - (Date.now() - begin);
+        setTimeout(processVideo, delay);
+    } catch (err) {
+        utils.printError(err);
+    }
+};
+
+// schedule the first one.
+setTimeout(processVideo, 0);
+}
+function onOpenCvReady() {
+  document.getElementById('status').innerHTML = 'OpenCV.js is ready.';
+}
+</script>
+<script async src="opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
+</body>
+</html>

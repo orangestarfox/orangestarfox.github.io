@@ -3,18 +3,21 @@
 <head>
 <meta charset="utf-8">
 <title>Digtal image process with opencv</title>
+<link rel="stylesheet" href="div.css" type="text/css" />
 </head>
 <body>
-<h2>Hello OpenCV.js</h2>
+<h2></h2>
 <p id="status">OpenCV.js is loading...</p>
 <div>
   <div class="inputoutput">
-    <img id="imageSrc" alt="No Image" />
-    <div class="caption">imageSrc <input type="file" id="fileInput" name="file" /></div>
-  </div>
-  <div class="inputoutput">
-    <canvas id="canvasOutput" ></canvas>
-    <div class="caption">canvasOutput</div>
+	<div > <img id="imageSrc" alt="No Image" />
+   
+	<canvas id="canvasOutput" ></canvas></div>
+	 
+    <div class="caption">imageSrc <input type="file" id="fileInput" name="file" />
+
+	</div>
+   
   </div>
 </div>
 <div style="background:#eee;border:1px solid #ccc;padding:5px 10px;">
@@ -26,9 +29,13 @@
 <button onclick="FFT()">FFT</button>
 <button onclick="HoughLines()">HoughLines</button>
 <button onclick="HoughCircles()">HoughCircles</button>
-</div>
+</div>  
 <div style="background:#777;border:1px solid #ccc;padding:5px 10px;">
 <p><a href="index.html"><input name="return" type="button" value="返回" /></a></p>
+</div>
+
+<div style="background:#734;border:1px solid #ccc;padding:5px 10px;">
+<p><a href="Capture.html"><input name="return" type="button" value="videoCapture" /></a></p>
 </div>
 <script type="text/javascript">
 let imgElement = document.getElementById('imageSrc');
