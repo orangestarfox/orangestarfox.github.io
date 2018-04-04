@@ -29,6 +29,7 @@
 
 <script type="text/javascript">
 var streaming=false;
+const FPS = 30;
 function videoCapture(){
 let canvasFrame = document.getElementById("canvasFrame"); // canvasFrame is the id of <canvas>
 let video = document.getElementById('videoInput');
@@ -43,9 +44,12 @@ navigator.mediaDevices.getUserMedia({ video: true, audio: false })
     .catch(function(err) {
         console.log("An error occurred! " + err);
     });
-const FPS = 30;
 streaming=!streaming;
-function processVideo() {
+// schedule the first one.
+setTimeout(processVideo(src,cap,dst), 0);
+};
+
+function processVideo(src,cap,dst) {
     try {
         if (!streaming) {
             // clean and stop.
@@ -60,14 +64,10 @@ function processVideo() {
         cv.imshow('canvasOutput', dst);
         // schedule the next one.
         let delay = 1000/FPS - (Date.now() - begin);
-        setTimeout(processVideo, delay);
+        setTimeout(processVideo(src,cap,dst), delay);
     } catch (err) {
         utils.printError(err);
     }
-};
-
-// schedule the first one.
-setTimeout(processVideo, 0);
 }
 function onOpenCvReady() {
   document.getElementById('status').innerHTML = 'OpenCV.js is ready.';

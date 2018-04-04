@@ -4,55 +4,21 @@
 	<meta charset="utf-8" />
 	<title>Draw</title>
 	
-<script type="text/javascript"> 
-var paint=-1;
-var X=0;
-var Y=0;
-var color="#000000"
-function Paint(e){
-paint=-paint;
-var c=document.getElementById("myCanvas");
-var cxt=c.getContext("2d");
-X=e.clientX-6;
-Y=e.clientY-12;
-}
-function cnvs_getCoordinates(e)
-{
-var c=document.getElementById("myCanvas");
-var cxt=c.getContext("2d");
 
-x=e.clientX-6;
-y=e.clientY-12;
-if(paint==1){
-cxt.beginPath()
-cxt.moveTo(X,Y);
-cxt.lineTo(x,y);
-X=x;
-Y=y;
-
-//cxt.lineTo(10,50);
-
- var color = document.getElementById("html5colorpicker").value;
-cxt.strokeStyle=color;
-cxt.stroke();
-}
-document.getElementById("xycoordinates").innerHTML="Coordinates: (" + x + "," + y + ")";
-}
-function cnvs_clearCoordinates()
-{
-document.getElementById("xycoordinates").innerHTML="";
-}
-</script>
 </head>
-<body>
-<p><canvas height="500" id="myCanvas" style="border:1px solid #c3c3c3;"  onmousemove="cnvs_getCoordinates(event)" 
- onmouseout="cnvs_clearCoordinates()" onclick="Paint(event)" width="800"  > 您的浏览器不支持 HTML5 canvas 标签。 </canvas>
+<body onload='snowing(window,document)'>
+<p><canvas height="500" id="myCanvas" style="border:1px solid #c3c3c3;"  
+width="800"  onclick="Paint(event)" > 您的浏览器不支持 HTML5 canvas 标签。 </canvas>
  
  
  <script>
 </script>
 </p>
 
+<div style="background:#eee;border:1px solid #ccc;padding:5px 10px;">
+<button onclick="drawCanvas()">巴恩斯利蕨</button>   
+<button onclick="drawTree()">Draw a tree</button>   
+</div>  
 <div id="xycoordinates"></div>
 <div id="html5Div">
 <h3>调色板</h3>
@@ -61,5 +27,8 @@ document.getElementById("xycoordinates").innerHTML="";
 <div style="background:#eee;border:1px solid #ccc;padding:5px 10px;">
 <p><a href="index.html"><input name="return" type="button" value="返回" /></a></p>
 </div>
+
+<script async src="canvas.js" type="text/javascript"></script>
+<script async src="snow.js" type="text/javascript"></script>
 </body>
 </html>
