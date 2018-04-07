@@ -11,9 +11,9 @@
 <div>
   <div class="inputoutput">
    
-	<div > <video id="videoInput" alt="No Image" />
-			<canvas id="canvasFrame" ></canvas>
-			<canvas id="canvasOutput" ></canvas></div>
+	<div > <video id="videoInput" alt="No Image" height='320' width='320'/></div>
+			<canvas id="canvasFrame"  height='240' width='320'></canvas>
+			<canvas id="canvasOutput" height='240' width='320'></canvas></div>
 	 
 
 	</div>
@@ -28,46 +28,36 @@
 </div>
 
 <script type="text/javascript">
-var streaming=false;
-const FPS = 30;
 function videoCapture(){
+let video = document.getElementById("videoInput"); // video is the id of video tag
+var canvas = document.getElementById("canvasFrame"),ctx = canvas.getContext("2d"),width = canvas.width,height = canvas.height;
+let src = new cv.Mat(height, width, cv.CV_8UC4);
+let dst = new cv.Mat(height, width, cv.CV_8UC1);
 let canvasFrame = document.getElementById("canvasFrame"); // canvasFrame is the id of <canvas>
-let video = document.getElementById('videoInput');
-let src = new cv.Mat(video.height, video.width, cv.CV_8UC4);
-let dst = new cv.Mat(video.height, video.width, cv.CV_8UC1);
-let cap = new cv.VideoCapture(video);
+let context = canvasFrame.getContext("2d");
+
 navigator.mediaDevices.getUserMedia({ video: true, audio: false })
     .then(function(stream) {
         video.srcObject = stream;
         video.play();
     })
     .catch(function(err) {
-        console.log("An error occurred! " + err);
+        console.log("An error occured! " + err);
     });
-streaming=!streaming;
-// schedule the first one.
-setTimeout(processVideo(src,cap,dst), 0);
-};
+const FPS = 30;
+function processVideo() {
+    let begin = Date.now();
+    context.drawImage(video, 0, 0,width, height);
+    src.data.set(context.getImageData(0, 0, width, height).data);
+    cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY);
+    cv.imshow("canvasFrame", dst); // canvasOutput is the id of another <canvas>;
+    // schedule next one.
+    let delay = 1000/FPS - (Date.now() - begin);
+    setTimeout(processVideo, delay);
+}
+// schedule first one.
+setTimeout(processVideo, 0);
 
-function processVideo(src,cap,dst) {
-    try {
-        if (!streaming) {
-            // clean and stop.
-            src.delete();
-            dst.delete();
-            return;
-        }
-        let begin = Date.now();
-        // start processing.
-        cap.read(src);
-        cv.cvtColor(src, dst, cv.COLOR_RGBA2GRAY);
-        cv.imshow('canvasOutput', dst);
-        // schedule the next one.
-        let delay = 1000/FPS - (Date.now() - begin);
-        setTimeout(processVideo(src,cap,dst), delay);
-    } catch (err) {
-        utils.printError(err);
-    }
 }
 function onOpenCvReady() {
   document.getElementById('status').innerHTML = 'OpenCV.js is ready.';
