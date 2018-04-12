@@ -38,6 +38,7 @@ cxt.stroke();
 function drawTree(){
 
 var canvas = document.getElementById("myCanvas"),ctx = canvas.getContext("2d"),W = canvas.width,H = canvas.height;
+ctx.fillStyle = 'rgba(255, 255, 255, 0)'
 var maxAngle = Math.PI/2,maxBranch = 3;
 //document.body.appendChild(canvas);
 
